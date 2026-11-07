@@ -44,3 +44,6 @@ export function teamRecord(team: string) {
   }
   return { wins, losses };
 }
+
+// "Court 1" becomes "1", used in the URL
+export const courtSlug = (court: string) => court.replace("Court ", "");
