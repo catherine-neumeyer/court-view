@@ -1,9 +1,13 @@
+import { Suspense } from "react";
 import Link from "next/link";
-import { teams, teamSlug, teamRecord } from "@/lib/seed";
+import { teamSlug } from "@/lib/slug";
+import { getMatches, getTeams, teamRecord } from "@/lib/data";
 
-export default function TeamsPage() {
+async function TeamsContent() {
+  const [teams, matches] = await Promise.all([getTeams(), getMatches()]);
+
   return (
-    <main className="mx-auto min-h-screen max-w-md bg-stone-100 text-stone-900">
+    <>
       <header className="border-b border-stone-200 bg-white px-5 pb-3 pt-5">
         <h1 className="text-2xl font-bold">Teams</h1>
         <p className="text-sm text-stone-600">{teams.length} teams</p>
@@ -11,7 +15,7 @@ export default function TeamsPage() {
 
       <ul className="m-4 rounded-2xl border border-stone-200 bg-white px-4">
         {teams.map((t) => {
-          const { wins, losses } = teamRecord(t);
+          const { wins, losses } = teamRecord(matches, t);
           return (
             <li key={t} className="border-b border-stone-200 last:border-b-0">
               <Link
@@ -27,6 +31,16 @@ export default function TeamsPage() {
           );
         })}
       </ul>
+    </>
+  );
+}
+
+export default function TeamsPage() {
+  return (
+    <main className="mx-auto min-h-screen max-w-md bg-stone-100 text-stone-900">
+      <Suspense fallback={<p className="p-4 text-stone-600">Loading teams...</p>}>
+        <TeamsContent />
+      </Suspense>
     </main>
   );
 }

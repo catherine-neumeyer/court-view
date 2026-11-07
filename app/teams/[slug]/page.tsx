@@ -1,27 +1,22 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { matches, teams, teamSlug, teamRecord } from "@/lib/seed";
+import { teamSlug } from "@/lib/slug";
+import { getMatches, getTeams, teamRecord } from "@/lib/data";
 
-export function generateStaticParams() {
-  return teams.map((t) => ({ slug: teamSlug(t) }));
-}
-
-export default async function TeamPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+async function TeamContent({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const [teams, matches] = await Promise.all([getTeams(), getMatches()]);
   const team = teams.find((t) => teamSlug(t) === slug);
   if (!team) notFound();
 
-  const { wins, losses } = teamRecord(team);
+  const { wins, losses } = teamRecord(matches, team);
   const teamMatches = matches.filter(
     (m) => m.teamA === team || m.teamB === team
   );
 
   return (
-    <main className="mx-auto min-h-screen max-w-md bg-stone-100 text-stone-900">
+    <>
       <header className="border-b border-stone-200 bg-white px-5 pb-3 pt-5">
         <Link href="/teams" className="text-sm font-semibold text-blue-700">
           ‹ All teams
@@ -55,6 +50,20 @@ export default async function TeamPage({
           );
         })}
       </div>
+    </>
+  );
+}
+
+export default function TeamPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  return (
+    <main className="mx-auto min-h-screen max-w-md bg-stone-100 text-stone-900">
+      <Suspense fallback={<p className="p-4 text-stone-600">Loading team...</p>}>
+        <TeamContent params={params} />
+      </Suspense>
     </main>
   );
 }

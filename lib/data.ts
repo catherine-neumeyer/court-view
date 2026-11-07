@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { Match } from "./seed";
+import type { Match } from "./types";
 
 type Row = {
   id: number;
@@ -53,4 +53,26 @@ export async function getMatches(): Promise<Match[]> {
     status: r.status,
     setInfo: r.set_info ?? undefined,
   }));
+}
+
+export async function getTeams(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("teams")
+    .select("name")
+    .order("name");
+  if (error) throw error;
+  return data.map((t) => t.name);
+}
+
+export function teamRecord(matches: Match[], team: string) {
+  let wins = 0;
+  let losses = 0;
+  for (const m of matches) {
+    if (m.status !== "final" || m.scoreA === null || m.scoreB === null) continue;
+    if (m.teamA !== team && m.teamB !== team) continue;
+    const won = m.teamA === team ? m.scoreA > m.scoreB : m.scoreB > m.scoreA;
+    if (won) wins++;
+    else losses++;
+  }
+  return { wins, losses };
 }

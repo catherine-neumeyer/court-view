@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { courtSlug } from "@/lib/seed";
+import { courtSlug } from "@/lib/slug";
 import { getCourts, getMatches } from "@/lib/data";
 
 async function CourtCards() {
