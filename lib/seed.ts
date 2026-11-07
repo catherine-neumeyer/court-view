@@ -20,4 +20,5 @@ export const matches: Match[] = [
   { id: 4, court: "Court 2", time: "2:40 PM", teamA: "Summit", teamB: "Oakridge", scoreA: null, scoreB: null, status: "upcoming" },
   { id: 5, court: "Court 3", time: "3:10 PM", teamA: "Westfield", teamB: "Harbor", scoreA: null, scoreB: null, status: "upcoming" },
   { id: 6, court: "Court 3", time: "3:50 PM", teamA: "Ridge", teamB: "Birchwood", scoreA: null, scoreB: null, status: "upcoming" },
+  { id: 7, court: "Court 3", time: "1:20 PM", teamA: "Riverside", teamB: "Harbor", scoreA: 25, scoreB: 19, status: "final", setInfo: "Final" },
 ];
