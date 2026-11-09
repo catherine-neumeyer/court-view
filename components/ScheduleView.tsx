@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Match } from "@/lib/types";
+import { shortName } from "@/lib/format";
 
 const statuses = ["all", "live", "upcoming", "final"] as const;
 type StatusFilter = (typeof statuses)[number];
@@ -94,7 +95,7 @@ export default function ScheduleView({ matches }: { matches: Match[] }) {
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-semibold">
-                    {m.teamA} vs {m.teamB}
+                    {shortName(m.teamA)} vs {shortName(m.teamB)}
                   </span>
                   {m.scoreA !== null ? (
                     <span className="font-bold tabular-nums">

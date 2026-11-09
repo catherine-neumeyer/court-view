@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { courtSlug } from "@/lib/slug";
 import { getCourts, getMatches } from "@/lib/data";
+import { shortName } from "@/lib/format";
 
 async function CourtCards() {
   const [courts, matches] = await Promise.all([getCourts(), getMatches()]);
@@ -36,14 +37,18 @@ async function CourtCards() {
               </span>
             </div>
 
+            {current.stage && (
+              <p className="text-sm text-stone-600">{current.stage}</p>
+            )}
+
             <div className="flex items-center justify-between">
-              <span className="text-lg font-semibold">{current.teamA}</span>
+              <span className="text-lg font-semibold">{shortName(current.teamA)}</span>
               <span className="text-4xl font-extrabold tabular-nums">
                 {current.scoreA ?? "-"}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-lg font-semibold">{current.teamB}</span>
+              <span className="text-lg font-semibold">{shortName(current.teamB)}</span>
               <span className="text-4xl font-extrabold tabular-nums">
                 {current.scoreB ?? "-"}
               </span>
@@ -56,7 +61,7 @@ async function CourtCards() {
             {next && (
               <div className="flex justify-between border-t border-stone-200 pt-2 text-sm text-stone-600">
                 <span>
-                  Next: {next.teamA} vs {next.teamB}
+                  Next: {shortName(next.teamA)} vs {shortName(next.teamB)}
                 </span>
                 <span>{next.time || next.date}</span>
               </div>

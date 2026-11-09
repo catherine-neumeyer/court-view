@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { teamSlug } from "@/lib/slug";
 import { getMatches, getTeams, teamRecord } from "@/lib/data";
+import { shortName } from "@/lib/format";
 
 async function TeamContent({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -38,7 +39,7 @@ async function TeamContent({ params }: { params: Promise<{ slug: string }> }) {
               className="rounded-2xl border border-stone-200 bg-white px-4 py-3"
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="font-semibold">vs {opponent}</span>
+                <span className="font-semibold">vs {shortName(opponent)}</span>
                 <span className="text-sm font-semibold tabular-nums">
                   {mine === null ? m.time : `${mine}-${theirs}`}
                 </span>

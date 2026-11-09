@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { courtSlug } from "@/lib/slug";
 import { getCourts, getMatches } from "@/lib/data";
+import { shortName } from "@/lib/format";
 
 async function CourtContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -41,13 +42,13 @@ async function CourtContent({ params }: { params: Promise<{ id: string }> }) {
               </p>
             )}
             <div className="flex items-center justify-between">
-              <span className="text-lg font-semibold">{current.teamA}</span>
+              <span className="text-lg font-semibold">{shortName(current.teamA)}</span>
               <span className="text-4xl font-extrabold tabular-nums">
                 {current.scoreA ?? "-"}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-lg font-semibold">{current.teamB}</span>
+              <span className="text-lg font-semibold">{shortName(current.teamA)}</span>
               <span className="text-4xl font-extrabold tabular-nums">
                 {current.scoreB ?? "-"}
               </span>
@@ -82,7 +83,7 @@ async function CourtContent({ params }: { params: Promise<{ id: string }> }) {
                   className="flex items-center justify-between gap-3 border-b border-stone-200 py-3 last:border-b-0"
                 >
                   <span>
-                    {m.teamA} vs {m.teamB}
+                    {shortName(m.teamA)} vs {shortName(m.teamB)}
                   </span>
                   <span className="shrink-0 text-sm text-stone-600">
                     {m.time || m.date}
