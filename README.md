@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Court View
 
-## Getting Started
+A mobile-first live scoring site for a volleyball tournament. It shows what is happening on each court right now, with live scores, the schedule, pool standings and a knockout bracket that fills itself in as results come in.
 
-First, run the development server:
+I built this as a learning project around an event I know well: Intervarsity TCD 2026 (Trinity College Dublin, 6 to 8 November 2026, 24 teams, 2 courts). The schedule and results are based on the published Tournify page. It is unofficial.
+
+**Live site:** https://court-view-murex.vercel.app
+
+![Live court view](docs/home.png)
+![Standings and bracket](docs/standings.png)
+
+## Features
+
+- **Live:** one card per court with the current match, the live score and the next match. Updates for every viewer without a refresh.
+- **Schedule:** filter by day, men or women, and status, with referees shown for each match.
+- **Standings:** pool tables ranked by points, goal difference, then head-to-head, and a Cup and Shield bracket. Bracket slots such as "Group A 1st" or "Winner Cup QF 1" turn into real team names automatically once a pool finishes or a match ends.
+- **Scorekeeper (staff only):** big +1 and -1 buttons, start and finish match, and undo.
+- **Info:** venue, how to watch, format and the raffle.
+
+## How it works
+
+- **Next.js (App Router), TypeScript and Tailwind CSS**, deployed on Vercel.
+- **Supabase** provides the Postgres database, authentication and Realtime. The site subscribes to changes on the matches table and refreshes the data when a score changes.
+- **Permissions are enforced in the database.** Row-level security lets anyone read, but only signed-in staff can update matches. Sign-ups are disabled, and staff accounts are created by hand. Hiding the buttons in the UI is not the protection.
+- **Standings logic** (`lib/standings.ts`) is plain TypeScript. It ranks each pool, breaks ties with head-to-head results, and resolves knockout labels into teams from the standings and earlier results.
+
+## Data model
+
+`courts`, `teams` (division and pool), `matches` (court, teams or placeholder labels, date, time, scores, status, stage, referee) and `staff` (user and role).
+
+## Run it locally
+
+```bash
+npm install
+```
+
+Create `.env.local` with your own Supabase project:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+```
+
+Then:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## What I would add next
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Admin screens to edit teams and the schedule inside the app, embedded stream players for each court, and tests for the standings logic.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Notes
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Friday and Saturday start times are estimated, because the published schedule gave the order of matches and not the times. Sunday times are as published.
