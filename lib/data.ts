@@ -1,22 +1,13 @@
 import { supabase } from "./supabase";
 import type { Match } from "./types";
-
-type Row = {
-  id: number;
-  match_date: string | null;
-  start_time: string | null;
-  stage: string | null;
-  label_a: string | null;
-  label_b: string | null;
-  score_a: number | null;
-  score_b: number | null;
-  status: Match["status"];
-  set_info: string | null;
-  court: { name: string };
-  team_a: { name: string } | null;
-  team_b: { name: string } | null;
-  referee: string | null;
-};
+import {
+  MATCH_SELECT,
+  TEAM_SELECT,
+  computeStandings,
+  parseMatches,
+  parseTeams,
+  resolveMatches,
+} from "./standings";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -37,6 +28,38 @@ function formatTime(t: string | null) {
   return `${hour}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
 }
 
+async function loadTournament() {
+  const [teamsRes, matchesRes] = await Promise.all([
+    supabase.from("teams").select(TEAM_SELECT),
+    supabase.from("matches").select(MATCH_SELECT).order("seq"),
+  ]);
+  if (teamsRes.error) throw teamsRes.error;
+  if (matchesRes.error) throw matchesRes.error;
+
+  const teams = parseTeams(teamsRes.data);
+  const raw = parseMatches(matchesRes.data);
+
+  const matches: Match[] = resolveMatches(raw, teams).map((m) => ({
+    id: m.id,
+    court: m.court,
+    date: formatDate(m.matchDate),
+    time: formatTime(m.startTime),
+    stage: m.stage ?? undefined,
+    division: m.division,
+    teamA: m.teamA?.name ?? m.labelA ?? "TBC",
+    teamB: m.teamB?.name ?? m.labelB ?? "TBC",
+    teamAKnown: !!m.teamA,
+    teamBKnown: !!m.teamB,
+    scoreA: m.scoreA,
+    scoreB: m.scoreB,
+    status: m.status,
+    setInfo: m.setInfo ?? undefined,
+    referee: m.referee ?? undefined,
+  }));
+
+  return { teams, matches, tables: computeStandings(teams, raw) };
+}
+
 export async function getCourts(): Promise<string[]> {
   const { data, error } = await supabase
     .from("courts")
@@ -47,41 +70,17 @@ export async function getCourts(): Promise<string[]> {
 }
 
 export async function getMatches(): Promise<Match[]> {
-  const { data, error } = await supabase
-    .from("matches")
-    .select(
-      `id, match_date, start_time, stage, label_a, label_b, referee,
-       score_a, score_b, status, set_info,
-       court:courts(name),
-       team_a:teams!team_a_id(name),
-       team_b:teams!team_b_id(name)`
-    )
-    .order("seq");
-  if (error) throw error;
-
-  return (data as unknown as Row[]).map((r) => ({
-    id: r.id,
-    court: r.court.name,
-    date: formatDate(r.match_date),
-    time: formatTime(r.start_time),
-    stage: r.stage ?? undefined,
-    teamA: r.team_a?.name ?? r.label_a ?? "TBC",
-    teamB: r.team_b?.name ?? r.label_b ?? "TBC",
-    scoreA: r.score_a,
-    scoreB: r.score_b,
-    status: r.status,
-    setInfo: r.set_info ?? undefined,
-    referee: r.referee ?? undefined,
-  }));
+  return (await loadTournament()).matches;
 }
 
 export async function getTeams(): Promise<string[]> {
-  const { data, error } = await supabase
-    .from("teams")
-    .select("name")
-    .order("name");
-  if (error) throw error;
-  return data.map((t) => t.name);
+  const { teams } = await loadTournament();
+  return teams.map((t) => t.name).sort();
+}
+
+export async function getStandingsData() {
+  const { matches, tables } = await loadTournament();
+  return { matches, tables };
 }
 
 export function teamRecord(matches: Match[], team: string) {
@@ -95,19 +94,4 @@ export function teamRecord(matches: Match[], team: string) {
     else losses++;
   }
   return { wins, losses };
-}
-
-export type PoolTeam = {
-  name: string;
-  division: "Men" | "Women";
-  pool: string | null;
-};
-
-export async function getPoolTeams(): Promise<PoolTeam[]> {
-  const { data, error } = await supabase
-    .from("teams")
-    .select("name, division, pool")
-    .order("name");
-  if (error) throw error;
-  return data as PoolTeam[];
 }

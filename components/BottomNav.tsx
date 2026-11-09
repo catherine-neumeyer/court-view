@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const tabs = [
+const tabs: { href: string; label: string; also?: string }[] = [
   { href: "/", label: "Live" },
   { href: "/schedule", label: "Schedule" },
-  { href: "/teams", label: "Teams" },
+  { href: "/standings", label: "Standings", also: "/teams" },
 ];
 
 export default function BottomNav() {
@@ -23,7 +23,10 @@ export default function BottomNav() {
       {tabs.map((t) => {
         const active =
           mounted &&
-          (t.href === "/" ? pathname === "/" : pathname.startsWith(t.href));
+          (t.href === "/"
+            ? pathname === "/"
+            : pathname.startsWith(t.href) ||
+              (!!t.also && pathname.startsWith(t.also)));
         return (
           <Link
             key={t.href}

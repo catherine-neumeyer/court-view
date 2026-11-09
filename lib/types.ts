@@ -4,8 +4,11 @@ export type Match = {
   date: string;
   time: string;
   stage?: string;
+  division: "Men" | "Women";
   teamA: string;
   teamB: string;
+  teamAKnown: boolean;
+  teamBKnown: boolean;
   scoreA: number | null;
   scoreB: number | null;
   status: "live" | "upcoming" | "final";

@@ -47,7 +47,7 @@ export default function ScheduleView({ matches }: { matches: Match[] }) {
   const filtered = matches.filter(
     (m) =>
       (day === "all" || m.date === day) &&
-      (division === "all" || m.stage?.endsWith(` - ${division}`)) &&
+      (division === "all" || m.division === division) &&
       (status === "all" || m.status === status)
   );
 
@@ -110,11 +110,11 @@ export default function ScheduleView({ matches }: { matches: Match[] }) {
                   )}
                 </div>
                 <p className="text-sm text-stone-600">
-                  {m.referee && (
-                    <p className="text-sm text-stone-600">Ref: {m.referee}</p>
-                    )}
                   {[m.time, m.court, m.stage].filter(Boolean).join(" · ")}
                 </p>
+                {m.referee && (
+                  <p className="text-sm text-stone-600">Ref: {m.referee}</p>
+                )}
               </div>
             ))}
           </section>

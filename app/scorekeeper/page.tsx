@@ -3,25 +3,30 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase-browser";
+import {
+  MATCH_SELECT,
+  TEAM_SELECT,
+  parseMatches,
+  parseTeams,
+  resolveMatches,
+} from "@/lib/standings";
+import { shortName } from "@/lib/format";
 
 const supabase = createClient();
 
 type Status = "upcoming" | "live" | "final";
-type Row = {
+type Item = {
   id: number;
+  court: string;
+  stage: string;
+  nameA: string;
+  nameB: string;
+  known: boolean;
   score_a: number | null;
   score_b: number | null;
   status: Status;
-  label_a: string | null;
-  label_b: string | null;
-  court: { name: string };
-  team_a: { name: string } | null;
-  team_b: { name: string } | null;
 };
 type Snapshot = { score_a: number | null; score_b: number | null; status: Status };
-
-const nameA = (r: Row) => r.team_a?.name ?? r.label_a ?? "TBC";
-const nameB = (r: Row) => r.team_b?.name ?? r.label_b ?? "TBC";
 
 export default function ScorekeeperPage() {
   const [ready, setReady] = useState(false);
@@ -30,11 +35,10 @@ export default function ScorekeeperPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
-  const [rows, setRows] = useState<Row[]>([]);
+  const [rows, setRows] = useState<Item[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [history, setHistory] = useState<Snapshot[]>([]);
 
-  // Track who is signed in
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -46,7 +50,6 @@ export default function ScorekeeperPage() {
     return () => data.subscription.unsubscribe();
   }, []);
 
-  // Show sign-in link errors from the address bar, if any
   useEffect(() => {
     const params = new URLSearchParams(
       window.location.search + "&" + window.location.hash.slice(1)
@@ -56,24 +59,34 @@ export default function ScorekeeperPage() {
   }, []);
 
   async function loadMatches() {
-    const { data } = await supabase
-      .from("matches")
-      .select(
-        `id, score_a, score_b, status, label_a, label_b,
-         court:courts(name),
-         team_a:teams!team_a_id(name),
-         team_b:teams!team_b_id(name)`
-      )
-      .neq("status", "final")
-      .order("seq");
-    const list = (data as unknown as Row[]) ?? [];
+    const [t, m] = await Promise.all([
+      supabase.from("teams").select(TEAM_SELECT),
+      supabase.from("matches").select(MATCH_SELECT).order("seq"),
+    ]);
+    if (t.error || m.error) {
+      setMessage((t.error ?? m.error)!.message);
+      return;
+    }
+    const resolved = resolveMatches(parseMatches(m.data), parseTeams(t.data));
+    const list: Item[] = resolved
+      .filter((r) => r.status !== "final")
+      .map((r) => ({
+        id: r.id,
+        court: r.court,
+        stage: r.stage ?? "",
+        nameA: r.teamA?.name ?? r.labelA ?? "TBC",
+        nameB: r.teamB?.name ?? r.labelB ?? "TBC",
+        known: !!r.teamA && !!r.teamB,
+        score_a: r.scoreA,
+        score_b: r.scoreB,
+        status: r.status,
+      }));
     setRows(list);
     setSelectedId((cur) =>
       list.some((r) => r.id === cur) ? cur : (list[0]?.id ?? null)
     );
   }
 
-  // Once signed in, check for a staff row and load matches
   useEffect(() => {
     if (!session) {
       setIsStaff(false);
@@ -229,7 +242,7 @@ export default function ScorekeeperPage() {
         </div>
       </header>
 
-      <div className="flex flex-col gap-3 p-4">
+      <div className="mx-auto flex max-w-md flex-col gap-3 p-4">
         {rows.length === 0 ? (
           <p className="rounded-2xl bg-white p-4 text-stone-600">
             No matches left to score.
@@ -245,7 +258,7 @@ export default function ScorekeeperPage() {
           >
             {rows.map((r) => (
               <option key={r.id} value={r.id}>
-                {r.court.name}: {nameA(r)} vs {nameB(r)} ({r.status})
+                {r.stage}: {shortName(r.nameA)} vs {shortName(r.nameB)} ({r.court}, {r.status})
               </option>
             ))}
           </select>
@@ -253,10 +266,14 @@ export default function ScorekeeperPage() {
 
         {match && (
           <>
+            <p className="text-sm text-stone-600">
+              {match.stage} · {match.court}
+            </p>
+
             {(
               [
-                ["score_a", nameA(match)],
-                ["score_b", nameB(match)],
+                ["score_a", match.nameA],
+                ["score_b", match.nameB],
               ] as const
             ).map(([side, name]) => (
               <section
@@ -264,7 +281,7 @@ export default function ScorekeeperPage() {
                 className="flex flex-col gap-3 rounded-2xl border border-stone-200 bg-white p-4"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold">{name}</span>
+                  <span className="text-lg font-semibold">{shortName(name)}</span>
                   <span className="text-6xl font-extrabold tabular-nums">
                     {match[side] ?? "-"}
                   </span>
@@ -290,6 +307,12 @@ export default function ScorekeeperPage() {
               </section>
             ))}
 
+            {!match.known && (
+              <p className="text-sm text-stone-600">
+                The teams for this match are not decided yet.
+              </p>
+            )}
+
             {match.status === "upcoming" && (
               <button
                 onClick={() =>
@@ -299,7 +322,8 @@ export default function ScorekeeperPage() {
                     score_b: match.score_b ?? 0,
                   })
                 }
-                className="min-h-14 rounded-2xl bg-blue-700 text-lg font-bold text-white"
+                disabled={!match.known}
+                className="min-h-14 rounded-2xl bg-blue-700 text-lg font-bold text-white disabled:opacity-40"
               >
                 Start match
               </button>
