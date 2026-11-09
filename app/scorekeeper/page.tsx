@@ -12,17 +12,23 @@ type Row = {
   score_a: number | null;
   score_b: number | null;
   status: Status;
+  label_a: string | null;
+  label_b: string | null;
   court: { name: string };
-  team_a: { name: string };
-  team_b: { name: string };
+  team_a: { name: string } | null;
+  team_b: { name: string } | null;
 };
 type Snapshot = { score_a: number | null; score_b: number | null; status: Status };
+
+const nameA = (r: Row) => r.team_a?.name ?? r.label_a ?? "TBC";
+const nameB = (r: Row) => r.team_b?.name ?? r.label_b ?? "TBC";
 
 export default function ScorekeeperPage() {
   const [ready, setReady] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [isStaff, setIsStaff] = useState(false);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -40,18 +46,26 @@ export default function ScorekeeperPage() {
     return () => data.subscription.unsubscribe();
   }, []);
 
+  // Show sign-in link errors from the address bar, if any
+  useEffect(() => {
+    const params = new URLSearchParams(
+      window.location.search + "&" + window.location.hash.slice(1)
+    );
+    const err = params.get("error_description");
+    if (err) setMessage(err);
+  }, []);
+
   async function loadMatches() {
     const { data } = await supabase
       .from("matches")
       .select(
-        `id, score_a, score_b, status,
+        `id, score_a, score_b, status, label_a, label_b,
          court:courts(name),
          team_a:teams!team_a_id(name),
          team_b:teams!team_b_id(name)`
       )
       .neq("status", "final")
-      .order("start_time")
-      .order("id");
+      .order("seq");
     const list = (data as unknown as Row[]) ?? [];
     setRows(list);
     setSelectedId((cur) =>
@@ -75,14 +89,6 @@ export default function ScorekeeperPage() {
       });
   }, [session]);
 
-  useEffect(() => {
-  const params = new URLSearchParams(
-    window.location.search + "&" + window.location.hash.slice(1)
-  );
-  const err = params.get("error_description");
-  if (err) setMessage(err);
-}, []);
-
   async function sendLink(e: React.FormEvent) {
     e.preventDefault();
     const { error } = await supabase.auth.signInWithOtp({
@@ -93,6 +99,14 @@ export default function ScorekeeperPage() {
       },
     });
     setMessage(error ? error.message : "Check your email for the sign-in link.");
+  }
+
+  async function signInWithPassword() {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    setMessage(error ? error.message : "");
   }
 
   const match = rows.find((r) => r.id === selectedId) ?? null;
@@ -139,7 +153,13 @@ export default function ScorekeeperPage() {
 
   const shell = "mx-auto min-h-screen max-w-md bg-stone-100 text-stone-900";
 
-  if (!ready) return <main className={shell}><p className="p-4">Loading...</p></main>;
+  if (!ready) {
+    return (
+      <main className={shell}>
+        <p className="p-4">Loading...</p>
+      </main>
+    );
+  }
 
   if (!session) {
     return (
@@ -156,7 +176,21 @@ export default function ScorekeeperPage() {
             placeholder="Your email"
             className="min-h-12 rounded-xl border border-stone-300 bg-white px-4"
           />
-          <button className="min-h-14 rounded-2xl bg-blue-700 text-lg font-bold text-white">
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            className="min-h-12 rounded-xl border border-stone-300 bg-white px-4"
+          />
+          <button
+            type="button"
+            onClick={signInWithPassword}
+            className="min-h-14 rounded-2xl bg-blue-700 text-lg font-bold text-white"
+          >
+            Sign in
+          </button>
+          <button className="min-h-14 rounded-2xl border border-stone-300 bg-white text-lg font-bold">
             Email me a sign-in link
           </button>
           {message && <p className="text-sm text-stone-600">{message}</p>}
@@ -211,7 +245,7 @@ export default function ScorekeeperPage() {
           >
             {rows.map((r) => (
               <option key={r.id} value={r.id}>
-                {r.court.name}: {r.team_a.name} vs {r.team_b.name} ({r.status})
+                {r.court.name}: {nameA(r)} vs {nameB(r)} ({r.status})
               </option>
             ))}
           </select>
@@ -221,8 +255,8 @@ export default function ScorekeeperPage() {
           <>
             {(
               [
-                ["score_a", match.team_a.name],
-                ["score_b", match.team_b.name],
+                ["score_a", nameA(match)],
+                ["score_b", nameB(match)],
               ] as const
             ).map(([side, name]) => (
               <section
@@ -259,7 +293,11 @@ export default function ScorekeeperPage() {
             {match.status === "upcoming" && (
               <button
                 onClick={() =>
-                  save({ status: "live", score_a: match.score_a ?? 0, score_b: match.score_b ?? 0 })
+                  save({
+                    status: "live",
+                    score_a: match.score_a ?? 0,
+                    score_b: match.score_b ?? 0,
+                  })
                 }
                 className="min-h-14 rounded-2xl bg-blue-700 text-lg font-bold text-white"
               >

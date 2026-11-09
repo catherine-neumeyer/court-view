@@ -1,6 +1,11 @@
-// "Court 1" becomes "1", used in the URL
-export const courtSlug = (court: string) => court.replace("Court ", "");
+const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 
-// "Cedar Park" becomes "cedar-park", used in the URL
-export const teamSlug = (team: string) =>
-  team.toLowerCase().replace(/\s+/g, "-");
+// "Men's Court" becomes "men-s-court", used in the URL
+export const courtSlug = slugify;
+
+// "Trinity College Dublin Men" becomes "trinity-college-dublin-men"
+export const teamSlug = slugify;

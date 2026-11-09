@@ -3,18 +3,34 @@ import type { Match } from "./types";
 
 type Row = {
   id: number;
-  start_time: string;
+  match_date: string | null;
+  start_time: string | null;
+  stage: string | null;
+  label_a: string | null;
+  label_b: string | null;
   score_a: number | null;
   score_b: number | null;
   status: Match["status"];
   set_info: string | null;
   court: { name: string };
-  team_a: { name: string };
-  team_b: { name: string };
+  team_a: { name: string } | null;
+  team_b: { name: string } | null;
 };
 
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// "2026-11-06" becomes "Fri 6 Nov"
+function formatDate(d: string | null) {
+  if (!d) return "";
+  const [y, m, day] = d.split("-").map(Number);
+  const weekday = DAYS[new Date(Date.UTC(y, m - 1, day)).getUTCDay()];
+  return `${weekday} ${day} ${MONTHS[m - 1]}`;
+}
+
 // "14:40:00" becomes "2:40 PM"
-function formatTime(t: string) {
+function formatTime(t: string | null) {
+  if (!t) return "";
   const [h, m] = t.split(":").map(Number);
   const hour = h % 12 === 0 ? 12 : h % 12;
   return `${hour}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
@@ -33,21 +49,23 @@ export async function getMatches(): Promise<Match[]> {
   const { data, error } = await supabase
     .from("matches")
     .select(
-      `id, start_time, score_a, score_b, status, set_info,
+      `id, match_date, start_time, stage, label_a, label_b,
+       score_a, score_b, status, set_info,
        court:courts(name),
        team_a:teams!team_a_id(name),
        team_b:teams!team_b_id(name)`
     )
-    .order("start_time")
-    .order("id");
+    .order("seq");
   if (error) throw error;
 
   return (data as unknown as Row[]).map((r) => ({
     id: r.id,
     court: r.court.name,
+    date: formatDate(r.match_date),
     time: formatTime(r.start_time),
-    teamA: r.team_a.name,
-    teamB: r.team_b.name,
+    stage: r.stage ?? undefined,
+    teamA: r.team_a?.name ?? r.label_a ?? "TBC",
+    teamB: r.team_b?.name ?? r.label_b ?? "TBC",
     scoreA: r.score_a,
     scoreB: r.score_b,
     status: r.status,

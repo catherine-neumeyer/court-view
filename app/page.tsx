@@ -72,7 +72,7 @@ export default function Home() {
   return (
     <main className="mx-auto min-h-screen max-w-md bg-stone-100 text-stone-900">
       <header className="border-b border-stone-200 bg-white px-5 pb-3 pt-5">
-        <h1 className="text-2xl font-bold">Spring Open</h1>
+        <h1 className="text-2xl font-bold">All-Ireland Intervarsities 2026</h1>
         <p className="text-sm text-stone-600">Live court view</p>
       </header>
 
