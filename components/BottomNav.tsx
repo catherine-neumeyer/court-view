@@ -8,6 +8,7 @@ const tabs: { href: string; label: string; also?: string }[] = [
   { href: "/", label: "Live" },
   { href: "/schedule", label: "Schedule" },
   { href: "/standings", label: "Standings", also: "/teams" },
+  { href: "/info", label: "Info" },
 ];
 
 export default function BottomNav() {
