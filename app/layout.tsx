@@ -26,8 +26,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col pb-16">
-        {children}
+      <body className="bg-stone-200 text-stone-900">
+        <div className="mx-auto min-h-screen w-full max-w-md bg-stone-100 pb-16 md:max-w-4xl">
+          {children}
+        </div>
         <Suspense fallback={null}>
           <LiveRefresh />
         </Suspense>

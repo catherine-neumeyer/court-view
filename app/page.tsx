@@ -7,7 +7,7 @@ async function CourtCards() {
   const [courts, matches] = await Promise.all([getCourts(), getMatches()]);
 
   return (
-    <div className="flex flex-col gap-3 p-4">
+    <div className="grid gap-3 p-4 md:grid-cols-2">
       {courts.map((court) => {
         const queue = matches.filter(
           (m) => m.court === court && m.status !== "final"
@@ -32,7 +32,7 @@ async function CourtCards() {
                   isLive ? "bg-red-700 text-white" : "bg-stone-200 text-stone-800"
                 }`}
               >
-                {isLive ? "LIVE" : `UP NEXT · ${current.time}`}
+                {isLive ? "LIVE" : `UP NEXT · ${current.time || current.date}`}
               </span>
             </div>
 
@@ -58,7 +58,7 @@ async function CourtCards() {
                 <span>
                   Next: {next.teamA} vs {next.teamB}
                 </span>
-                <span>{next.time}</span>
+                <span>{next.time || next.date}</span>
               </div>
             )}
           </Link>
@@ -70,7 +70,7 @@ async function CourtCards() {
 
 export default function Home() {
   return (
-    <main className="mx-auto min-h-screen max-w-md bg-stone-100 text-stone-900">
+    <main className="w-full">
       <header className="border-b border-stone-200 bg-white px-5 pb-3 pt-5">
         <h1 className="text-2xl font-bold">All-Ireland Intervarsities 2026</h1>
         <p className="text-sm text-stone-600">Live court view</p>

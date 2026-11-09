@@ -94,3 +94,18 @@ export function teamRecord(matches: Match[], team: string) {
   }
   return { wins, losses };
 }
+
+export type PoolTeam = {
+  name: string;
+  division: "Men" | "Women";
+  pool: string | null;
+};
+
+export async function getPoolTeams(): Promise<PoolTeam[]> {
+  const { data, error } = await supabase
+    .from("teams")
+    .select("name, division, pool")
+    .order("name");
+  if (error) throw error;
+  return data as PoolTeam[];
+}

@@ -19,7 +19,7 @@ export default function BottomNav() {
   }, []);
 
   return (
-    <nav className="fixed bottom-0 left-1/2 flex w-full max-w-md -translate-x-1/2 border-t border-stone-200 bg-white">
+    <nav className="fixed bottom-0 left-1/2 z-10 flex w-full max-w-md -translate-x-1/2 border-t border-stone-200 bg-white md:max-w-4xl">
       {tabs.map((t) => {
         const active =
           mounted &&

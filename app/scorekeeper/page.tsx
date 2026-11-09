@@ -151,7 +151,7 @@ export default function ScorekeeperPage() {
     loadMatches();
   }
 
-  const shell = "mx-auto min-h-screen max-w-md bg-stone-100 text-stone-900";
+  const shell = "w-full";
 
   if (!ready) {
     return (

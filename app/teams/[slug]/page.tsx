@@ -60,7 +60,7 @@ export default function TeamPage({
   params: Promise<{ slug: string }>;
 }) {
   return (
-    <main className="mx-auto min-h-screen max-w-md bg-stone-100 text-stone-900">
+    <main className="w-full">
       <Suspense fallback={<p className="p-4 text-stone-600">Loading team...</p>}>
         <TeamContent params={params} />
       </Suspense>

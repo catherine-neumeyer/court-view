@@ -93,7 +93,7 @@ export default function CourtPage({
   params: Promise<{ id: string }>;
 }) {
   return (
-    <main className="mx-auto min-h-screen max-w-md bg-stone-100 text-stone-900">
+    <main className="w-full">
       <Suspense fallback={<p className="p-4 text-stone-600">Loading court...</p>}>
         <CourtContent params={params} />
       </Suspense>

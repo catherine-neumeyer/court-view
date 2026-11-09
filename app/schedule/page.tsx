@@ -9,7 +9,7 @@ async function ScheduleContent() {
 
 export default function SchedulePage() {
   return (
-    <main className="mx-auto min-h-screen max-w-md bg-stone-100 text-stone-900">
+    <main className="">
       <Suspense
         fallback={<p className="p-4 text-stone-600">Loading schedule...</p>}
       >
