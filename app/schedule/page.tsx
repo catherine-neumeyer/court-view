@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import { getCourts, getMatches } from "@/lib/data";
+import { getMatches } from "@/lib/data";
 import ScheduleView from "@/components/ScheduleView";
 
 async function ScheduleContent() {
-  const [courts, matches] = await Promise.all([getCourts(), getMatches()]);
-  return <ScheduleView courts={courts} matches={matches} />;
+  const matches = await getMatches();
+  return <ScheduleView matches={matches} />;
 }
 
 export default function SchedulePage() {
