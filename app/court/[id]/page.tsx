@@ -35,6 +35,11 @@ async function CourtContent({ params }: { params: Promise<{ id: string }> }) {
       <div className="flex flex-col gap-3 p-4">
         {current ? (
           <section className="flex flex-col gap-2 rounded-2xl border border-stone-200 bg-white p-4">
+            {current.stage && (
+              <p className="text-xs font-bold tracking-wider text-stone-600">
+                {current.stage.toUpperCase()}
+              </p>
+            )}
             <div className="flex items-center justify-between">
               <span className="text-lg font-semibold">{current.teamA}</span>
               <span className="text-4xl font-extrabold tabular-nums">
@@ -48,8 +53,11 @@ async function CourtContent({ params }: { params: Promise<{ id: string }> }) {
               </span>
             </div>
             <p className="text-sm text-stone-600">
-              {current.setInfo ?? `Starts ${current.time}`}
+              {current.setInfo ?? `Starts ${current.time || current.date}`}
             </p>
+            {current.referee && (
+              <p className="text-sm text-stone-600">Ref: {current.referee}</p>
+            )}
           </section>
         ) : (
           <p className="rounded-2xl bg-white p-4 text-stone-600">
@@ -68,15 +76,17 @@ async function CourtContent({ params }: { params: Promise<{ id: string }> }) {
               UPCOMING ON THIS COURT
             </h2>
             <ul className="rounded-2xl border border-stone-200 bg-white px-4">
-              {upcoming.map((m) => (
+              {upcoming.slice(0, 8).map((m) => (
                 <li
                   key={m.id}
-                  className="flex justify-between border-b border-stone-200 py-3 last:border-b-0"
+                  className="flex items-center justify-between gap-3 border-b border-stone-200 py-3 last:border-b-0"
                 >
                   <span>
                     {m.teamA} vs {m.teamB}
                   </span>
-                  <span className="text-sm text-stone-600">{m.time}</span>
+                  <span className="shrink-0 text-sm text-stone-600">
+                    {m.time || m.date}
+                  </span>
                 </li>
               ))}
             </ul>

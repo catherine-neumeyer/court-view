@@ -109,6 +109,9 @@ export default function ScheduleView({ matches }: { matches: Match[] }) {
                   )}
                 </div>
                 <p className="text-sm text-stone-600">
+                  {m.referee && (
+                    <p className="text-sm text-stone-600">Ref: {m.referee}</p>
+                    )}
                   {[m.time, m.court, m.stage].filter(Boolean).join(" · ")}
                 </p>
               </div>

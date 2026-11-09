@@ -10,4 +10,5 @@ export type Match = {
   scoreB: number | null;
   status: "live" | "upcoming" | "final";
   setInfo?: string;
+  referee?: string;
 };

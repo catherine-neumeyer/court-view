@@ -15,6 +15,7 @@ type Row = {
   court: { name: string };
   team_a: { name: string } | null;
   team_b: { name: string } | null;
+  referee: string | null;
 };
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -49,7 +50,7 @@ export async function getMatches(): Promise<Match[]> {
   const { data, error } = await supabase
     .from("matches")
     .select(
-      `id, match_date, start_time, stage, label_a, label_b,
+      `id, match_date, start_time, stage, label_a, label_b, referee,
        score_a, score_b, status, set_info,
        court:courts(name),
        team_a:teams!team_a_id(name),
@@ -70,6 +71,7 @@ export async function getMatches(): Promise<Match[]> {
     scoreB: r.score_b,
     status: r.status,
     setInfo: r.set_info ?? undefined,
+    referee: r.referee ?? undefined,
   }));
 }
 
